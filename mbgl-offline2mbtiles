@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Convert a mbgl-offline .db file into a .mbtiles file
+
+cp $1 $2
+sqlite3 $2 'ALTER TABLE tiles RENAME TO dbtiles;'
+sqlite3 $2 "SELECT load_extension('./libsqlitefunctions.so'); CREATE TABLE tiles AS SELECT z AS zoom_level, x AS tile_column, (power(2, z) - y - 1) AS tile_row, data AS tile_data FROM dbtiles;"
+sqlite3 $2 'DROP TABLE region_resources;'
+sqlite3 $2 'DROP TABLE resources;'
+sqlite3 $2 'DROP TABLE region_tiles;'
+sqlite3 $2 'DROP TABLE regions;'
+sqlite3 $2 'DROP TABLE dbtiles;'
+sqlite3 $2 'DROP TABLE sqlite_sequence;'
+sqlite3 $2 'CREATE TABLE metadata ( name TEXT, value TEXT );'
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'name', '');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'description', '');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'version', '2');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'minzoom', '0');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'maxzoom', '14');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'center', '0,0');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'bounds', '-180,-90,180,90');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'type', 'overlay');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'attribution', '');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'format', 'pbf');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'generator', 'mbgl-offline2mbtiles');"
