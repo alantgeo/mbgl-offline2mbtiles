@@ -6,6 +6,11 @@ cp $1 $2
 sqlite3 $2 'ALTER TABLE tiles RENAME TO dbtiles;'
 sqlite3 $2 "SELECT load_extension('./libsqlitefunctions.so'); CREATE TABLE tiles AS SELECT z AS zoom_level, x AS tile_column, CAST((power(2, z) - y - 1) AS INTEGER) AS tile_row, data AS tile_data FROM dbtiles;"
 sqlite3 $2 'DROP TABLE region_resources;'
+tileset_compressed_file=`mktemp`
+sqlite3 $2 "SELECT writefile('$tileset_compressed_file', data) FROM resources WHERE kind = 2 LIMIT 1;"
+vector_layers_file=`mktemp`
+zlib-flate -uncompress < $tileset_compressed_file | jq --compact-output '{ "vector_layers": .vector_layers }' | tr -d "'" > $vector_layers_file
+rm -rf $tileset_compressed_file
 sqlite3 $2 'DROP TABLE resources;'
 sqlite3 $2 'DROP TABLE region_tiles;'
 sqlite3 $2 'DROP TABLE regions;'
@@ -23,3 +28,6 @@ sqlite3 $2 "INSERT INTO metadata VALUES ( 'type', 'overlay');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'attribution', '');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'format', 'pbf');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'generator', 'mbgl-offline2mbtiles');"
+vector_layers=`cat $vector_layers_file`
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'json', '$vector_layers');"
+rm -rf $vector_layers_file
