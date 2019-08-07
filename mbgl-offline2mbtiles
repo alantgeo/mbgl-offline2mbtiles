@@ -4,7 +4,7 @@
 
 cp $1 $2
 sqlite3 $2 'ALTER TABLE tiles RENAME TO dbtiles;'
-sqlite3 $2 "SELECT load_extension('./libsqlitefunctions.so'); CREATE TABLE tiles AS SELECT z AS zoom_level, x AS tile_column, (power(2, z) - y - 1) AS tile_row, data AS tile_data FROM dbtiles;"
+sqlite3 $2 "SELECT load_extension('./libsqlitefunctions.so'); CREATE TABLE tiles AS SELECT z AS zoom_level, x AS tile_column, CAST((power(2, z) - y - 1) AS INTEGER) AS tile_row, data AS tile_data FROM dbtiles;"
 sqlite3 $2 'DROP TABLE region_resources;'
 sqlite3 $2 'DROP TABLE resources;'
 sqlite3 $2 'DROP TABLE region_tiles;'
