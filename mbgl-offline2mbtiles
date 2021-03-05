@@ -4,6 +4,8 @@
 
 cp $1 $2
 sqlite3 $2 'ALTER TABLE tiles RENAME TO dbtiles;'
+MINZOOM=`sqlite3 $2 'SELECT definition FROM regions;' | jq '.min_zoom'`
+MAXZOOM=`sqlite3 $2 'SELECT definition FROM regions;' | jq '.max_zoom'`
 sqlite3 $2 "SELECT load_extension('./libsqlitefunctions.so'); CREATE TABLE tiles AS SELECT z AS zoom_level, x AS tile_column, CAST((power(2, z) - y - 1) AS INTEGER) AS tile_row, data AS tile_data FROM dbtiles;"
 sqlite3 $2 'DROP TABLE region_resources;'
 tileset_compressed_file=`mktemp`
@@ -20,8 +22,8 @@ sqlite3 $2 'CREATE TABLE metadata ( name TEXT, value TEXT );'
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'name', '');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'description', '');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'version', '2');"
-sqlite3 $2 "INSERT INTO metadata VALUES ( 'minzoom', '0');"
-sqlite3 $2 "INSERT INTO metadata VALUES ( 'maxzoom', '14');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'minzoom', '$MINZOOM');"
+sqlite3 $2 "INSERT INTO metadata VALUES ( 'maxzoom', '$MAXZOOM');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'center', '0,0,0');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'bounds', '-180,-90,180,90');"
 sqlite3 $2 "INSERT INTO metadata VALUES ( 'type', 'overlay');"
