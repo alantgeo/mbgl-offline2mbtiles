@@ -2,6 +2,10 @@
 
 # Convert a mbgl-offline .db file into a .mbtiles file
 
+if [ -z "$1" -o -z "$2" -o "$1" = "-h" -o "$1" = "--help" ]; then
+    echo "Usage: $0 input.db output.mbtiles"
+fi
+
 cp $1 $2
 sqlite3 $2 'ALTER TABLE tiles RENAME TO dbtiles;'
 MINZOOM=`sqlite3 $2 'SELECT definition FROM regions;' | jq '.min_zoom'`
